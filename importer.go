@@ -13,8 +13,14 @@ import (
 func main() {
 	// ids := get_started_game_ids()
 	// fmt.Println(ids)
-	print_game_stats(401266806)
+
+	egls := get_espn_game_lines(401266806)
+	for _, gl := range egls {
+		fmt.Printf("%s %s: %s\n", gl.FirstName, gl.LastName, gl.Points)
+	}
 }
+
+//######################### ESPN Scoreboard API Client #########################
 
 type scoreboard struct {
 	Events []event
@@ -80,6 +86,8 @@ func get_started_game_ids() []int {
 	return ids
 }
 
+//########################## ESPN Gamecast API Client ##########################
+
 type game struct {
 	Gamecast gamecast
 }
@@ -89,15 +97,15 @@ type gamecast struct {
 }
 
 type stats struct {
-	Player players
-}
-
-type players struct {
-	Home []player
-	Away []player
+	Player player
 }
 
 type player struct {
+	Home []EspnGameLine
+	Away []EspnGameLine
+}
+
+type EspnGameLine struct {
 	Id int
 	FirstName string
 	LastName string
@@ -121,7 +129,7 @@ type player struct {
 	EnteredGame bool
 }
 
-func print_game_stats(gid int) {
+func get_espn_game_lines(gid int) []EspnGameLine {
 	query := fmt.Sprintf("xhr=1&gameId=%d&lang=en&init=true&setType=true&confId=null", gid)
 	u := &url.URL{
 		Scheme: "http",
@@ -152,14 +160,17 @@ func print_game_stats(gid int) {
 		// exit?
 	}
 
-	// skip totals player row
-	for _, p := range g.Gamecast.Stats.Player.Home {
-		fmt.Printf("%s %s: %s\n", p.FirstName, p.LastName, p.Points)
+	var egls []EspnGameLine
+	for _, gl := range g.Gamecast.Stats.Player.Home {
+		if gl.Id != 0 { // totals row has a 0 id
+			egls = append(egls, gl)
+		}
+	}
+	for _, gl := range g.Gamecast.Stats.Player.Away {
+		if gl.Id != 0 { // totals row has a 0 id
+			egls = append(egls, gl)
+		}
 	}
 
-	for _, p := range g.Gamecast.Stats.Player.Away {
-		fmt.Printf("%s %s: %s\n", p.FirstName, p.LastName, p.Points)
-	}
-
-    // build new player struct for my use
+	return egls
 }
