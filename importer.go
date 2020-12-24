@@ -7,16 +7,29 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
+	"sort"
 	"strconv"
 )
 
 func main() {
-	// ids := get_started_game_ids()
-	// fmt.Println(ids)
+	gids := getStartedGameIds()
 
-	egls := get_espn_game_lines(401266806)
-	for _, gl := range egls {
-		fmt.Printf("%s %s: %s\n", gl.FirstName, gl.LastName, gl.Points)
+	var glss []GameLine
+	for _, gid := range gids {
+		egls := getEspnGameLines(gid)
+		gls := mapEspnGameLines(egls)
+		for _, gl := range gls {
+			glss = append(glss, gl)
+		}
+	}
+
+	sort.SliceStable(glss, func(i, j int) bool {
+		return glss[i].Zsum < glss[j].Zsum
+	})
+
+	for _, gl := range glss {
+		printGameLine(gl)
 	}
 }
 
@@ -40,7 +53,7 @@ type statusType struct {
 }
 
 // move into espn scoreboard api client
-func get_started_game_ids() []int {
+func getStartedGameIds() []int {
 	u := &url.URL{
 		Scheme: "http",
 		Host: "site.api.espn.com",
@@ -60,24 +73,20 @@ func get_started_game_ids() []int {
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatalln(err)
-		// exit?
 	}
 
 	sb := scoreboard{}
 	err = json.Unmarshal(body, &sb)
 	if err != nil {
 		log.Fatalln(err)
-		// exit?
 	}
 
 	var ids []int
 	for _, e := range sb.Events {
-		fmt.Printf("%s: %s\n", e.Id, e.Status.Type.State)
 		if e.Status.Type.State != "pre" {
 			id, err := strconv.Atoi(e.Id)
 			if err != nil {
 				log.Fatalln(err)
-				// exit?
 			}
 			ids = append(ids, id)
 		}
@@ -129,7 +138,7 @@ type EspnGameLine struct {
 	EnteredGame bool
 }
 
-func get_espn_game_lines(gid int) []EspnGameLine {
+func getEspnGameLines(gid int) []EspnGameLine {
 	query := fmt.Sprintf("xhr=1&gameId=%d&lang=en&init=true&setType=true&confId=null", gid)
 	u := &url.URL{
 		Scheme: "http",
@@ -146,18 +155,20 @@ func get_espn_game_lines(gid int) []EspnGameLine {
 	}
 	defer resp.Body.Close()
 
-	// json.NewDecoder(r.Body).Decode(target)
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatalln(err)
-		// exit?
 	}
 
+	s := string(body)
+	re := regexp.MustCompile("[[:^print:]]")
+	t := re.ReplaceAllLiteralString(s, "")
+	b := []byte(t)
+
 	g := game{}
-	err = json.Unmarshal(body, &g)
+	err = json.Unmarshal(b, &g)
 	if err != nil {
 		log.Fatalln(err)
-		// exit?
 	}
 
 	var egls []EspnGameLine
@@ -173,4 +184,133 @@ func get_espn_game_lines(gid int) []EspnGameLine {
 	}
 
 	return egls
+}
+
+//################################ Some Library ################################
+
+type GameLine struct {
+	EspnId int
+	FirstName string
+	LastName string
+	Min int
+	Fgm int
+	Fga int
+	Ftm int
+	Fta int
+	Tpm int
+	Tpa int
+	Pts int
+	Reb int
+	Ast int
+	Stl int
+	Blk int
+	To int
+	Zfg float64
+	Zft float64
+	Ztp float64
+	Zpts float64
+	Zreb float64
+	Zast float64
+	Zstl float64
+	Zblk float64
+	Zto float64
+	Zsum float64
+}
+
+func mapEspnGameLines(egls []EspnGameLine) []GameLine {
+	var gls []GameLine
+	for _, egl := range egls {
+		gl := mapEspnGameLine(egl)
+		gls = append(gls, gl)
+	}
+	return gls
+}
+
+func mapEspnGameLine(egl EspnGameLine) GameLine {
+	min, _ := strconv.Atoi(egl.Minutes)
+	pts, _ := strconv.Atoi(egl.Points)
+	reb, _ := strconv.Atoi(egl.Rebounds)
+	ast, _ := strconv.Atoi(egl.Assists)
+	stl, _ := strconv.Atoi(egl.Steals)
+	blk, _ := strconv.Atoi(egl.Blocks)
+	to, _ := strconv.Atoi(egl.Turnovers)
+
+	var fgm, fga int
+	fmt.Sscanf(egl.Fg, "%d/%d", &fgm, &fga)
+	var ftm, fta int
+	fmt.Sscanf(egl.Ft, "%d/%d", &ftm, &fta)
+	var tpm, tpa int
+	fmt.Sscanf(egl.Threept, "%d/%d", &tpm, &tpa)
+
+	// better way to calculate this?
+	// double check the following using hashtag
+	zfg := 0.0
+	zft := 0.0
+	ztp := 0.0
+	zpts := (float64(pts) - 13.1) / 6.35
+	zreb := (float64(reb) - 4.8) / 2.4
+	zast := (float64(ast) - 2.5) / 1.8
+	zstl := (float64(stl) - 0.9) / 1.3
+	zblk := (float64(blk) - 0.5) / 0.5
+	zto := -((float64(to) - 1.55) / 0.85)
+	zsum := zfg + zft + ztp + zpts + zreb + zast + zstl + zblk + zto
+
+	return GameLine{
+		EspnId: egl.Id,
+		FirstName: egl.FirstName,
+		LastName: egl.LastName,
+		Min: min,
+		Fgm: fgm,
+		Fga: fga,
+		Ftm: ftm,
+		Fta: fta,
+		Tpm: tpm,
+		Tpa: tpa,
+		Pts: pts,
+		Reb: reb,
+		Ast: ast,
+		Stl: stl,
+		Blk: blk,
+		To: to,
+		Zfg: zfg,
+		Zft: zft,
+		Ztp: ztp,
+		Zpts: zpts,
+		Zreb: zreb,
+		Zast: zast,
+		Zstl: zstl,
+		Zblk: zblk,
+		Zto: zto,
+		Zsum: zsum,
+	}
+}
+
+func printGameLine(l GameLine) {
+	fmt.Printf("%s %s,|,%dm,%d-%d,%d-%d,%d-%d,%d-%d-%d,%d-%d-%d,|,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n",
+		l.FirstName,
+		l.LastName,
+		l.Min,
+		l.Fgm,
+		l.Fga,
+		l.Ftm,
+		l.Fta,
+		l.Tpm,
+		l.Tpa,
+		l.Pts,
+		l.Reb,
+		l.Ast,
+		l.Stl,
+		l.Blk,
+		l.To,
+		l.Zfg,
+		l.Zft,
+		l.Ztp,
+		l.Zpts,
+		l.Zreb,
+		l.Zast,
+		l.Zstl,
+		l.Zblk,
+		l.Zto,
+		l.Zsum,
+	)
 }
