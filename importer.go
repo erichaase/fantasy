@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -13,7 +14,8 @@ import (
 )
 
 func main() {
-	gids := getStartedGameIds()
+	day := os.Args[1]
+	gids := getStartedGameIds(day)
 
 	var glss []GameLine
 	for _, gid := range gids {
@@ -53,12 +55,17 @@ type statusType struct {
 }
 
 // move into espn scoreboard api client
-func getStartedGameIds() []int {
+func getStartedGameIds(day string) []int {
+	q := "lang=en&region=us&calendartype=blacklist&limit=100"
+	if day != "" {
+		q = fmt.Sprintf("%s&dates=%s", q, day)
+	}
+
 	u := &url.URL{
 		Scheme: "http",
 		Host: "site.api.espn.com",
 		Path: "apis/site/v2/sports/basketball/nba/scoreboard",
-		RawQuery: "lang=en&region=us&calendartype=blacklist&limit=100",
+		RawQuery: q,
 	}
 
 	// var myClient = &http.Client{Timeout: 10 * time.Second}
@@ -245,12 +252,18 @@ func mapEspnGameLine(egl EspnGameLine) GameLine {
 	// better way to calculate this?
 	// double check the following using hashtag
 	zfg := 0.0
+	if fga != 0 {
+		zfg = (((float64(fgm) / float64(fga)) - 0.457) / 0.06236986313) * (float64(fga) / (5.011649158 * 2))
+	}
 	zft := 0.0
-	ztp := 0.0
+	if fta != 0 {
+		zft = (((float64(ftm) / float64(fta)) - 0.775) / 0.08132524135) * (float64(fta) / (1.819730344 * 2))
+	}
+	ztp := (float64(tpm) - 1.5) / 0.9
 	zpts := (float64(pts) - 13.1) / 6.35
 	zreb := (float64(reb) - 4.8) / 2.4
 	zast := (float64(ast) - 2.5) / 1.8
-	zstl := (float64(stl) - 0.9) / 1.3
+	zstl := (float64(stl) - 0.9) / 0.4
 	zblk := (float64(blk) - 0.5) / 0.5
 	zto := -((float64(to) - 1.55) / 0.85)
 	zsum := zfg + zft + ztp + zpts + zreb + zast + zstl + zblk + zto
@@ -286,7 +299,7 @@ func mapEspnGameLine(egl EspnGameLine) GameLine {
 }
 
 func printGameLine(l GameLine) {
-	fmt.Printf("%s %s,|,%dm,%d-%d,%d-%d,%d-%d,%d-%d-%d,%d-%d-%d,|,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n",
+	fmt.Printf("%s %s,|,%dm,%d-%d,%d-%d,%d-%d,%d-%d-%d,%d-%d-%d,|,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,|,%.1f\n",
 		l.FirstName,
 		l.LastName,
 		l.Min,
