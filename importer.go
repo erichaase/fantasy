@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -42,7 +42,7 @@ type scoreboard struct {
 }
 
 type event struct {
-	Id string
+	Id     string
 	Status status
 }
 
@@ -62,9 +62,9 @@ func getStartedGameIds(day string) []int {
 	}
 
 	u := &url.URL{
-		Scheme: "http",
-		Host: "site.api.espn.com",
-		Path: "apis/site/v2/sports/basketball/nba/scoreboard",
+		Scheme:   "http",
+		Host:     "site.api.espn.com",
+		Path:     "apis/site/v2/sports/basketball/nba/scoreboard",
 		RawQuery: q,
 	}
 
@@ -122,35 +122,35 @@ type player struct {
 }
 
 type EspnGameLine struct {
-	Id int
-	FirstName string
-	LastName string
+	Id             int
+	FirstName      string
+	LastName       string
 	PositionAbbrev string
-	Jersey string
-	Active string
-	IsStarter string
-	Fg string
-	Ft string
-	Threept string
-	Rebounds string
-	Assists string
-	Steals string
-	Fouls string
-	Points string
-	Minutes string
-	Blocks string
-	Turnovers string
-	PlusMinus string
-	Dnp bool
-	EnteredGame bool
+	Jersey         string
+	Active         string
+	IsStarter      string
+	Fg             string
+	Ft             string
+	Threept        string
+	Rebounds       string
+	Assists        string
+	Steals         string
+	Fouls          string
+	Points         string
+	Minutes        string
+	Blocks         string
+	Turnovers      string
+	PlusMinus      string
+	Dnp            bool
+	EnteredGame    bool
 }
 
 func getEspnGameLines(gid int) []EspnGameLine {
 	query := fmt.Sprintf("xhr=1&gameId=%d&lang=en&init=true&setType=true&confId=null", gid)
 	u := &url.URL{
-		Scheme: "http",
-		Host: "scores.espn.go.com",
-		Path: "nba/gamecast12/master",
+		Scheme:   "http",
+		Host:     "scores.espn.go.com",
+		Path:     "nba/gamecast12/master",
 		RawQuery: query,
 	}
 
@@ -196,32 +196,32 @@ func getEspnGameLines(gid int) []EspnGameLine {
 //################################ Some Library ################################
 
 type GameLine struct {
-	EspnId int
+	EspnId    int
 	FirstName string
-	LastName string
-	Min int
-	Fgm int
-	Fga int
-	Ftm int
-	Fta int
-	Tpm int
-	Tpa int
-	Pts int
-	Reb int
-	Ast int
-	Stl int
-	Blk int
-	To int
-	Zfg float64
-	Zft float64
-	Ztp float64
-	Zpts float64
-	Zreb float64
-	Zast float64
-	Zstl float64
-	Zblk float64
-	Zto float64
-	Zsum float64
+	LastName  string
+	Min       int
+	Fgm       int
+	Fga       int
+	Ftm       int
+	Fta       int
+	Tpm       int
+	Tpa       int
+	Pts       int
+	Reb       int
+	Ast       int
+	Stl       int
+	Blk       int
+	To        int
+	Zfg       float64
+	Zft       float64
+	Ztp       float64
+	Zpts      float64
+	Zreb      float64
+	Zast      float64
+	Zstl      float64
+	Zblk      float64
+	Zto       float64
+	Zsum      float64
 }
 
 func mapEspnGameLines(egls []EspnGameLine) []GameLine {
@@ -269,32 +269,32 @@ func mapEspnGameLine(egl EspnGameLine) GameLine {
 	zsum := zfg + zft + ztp + zpts + zreb + zast + zstl + zblk + zto
 
 	return GameLine{
-		EspnId: egl.Id,
+		EspnId:    egl.Id,
 		FirstName: egl.FirstName,
-		LastName: egl.LastName,
-		Min: min,
-		Fgm: fgm,
-		Fga: fga,
-		Ftm: ftm,
-		Fta: fta,
-		Tpm: tpm,
-		Tpa: tpa,
-		Pts: pts,
-		Reb: reb,
-		Ast: ast,
-		Stl: stl,
-		Blk: blk,
-		To: to,
-		Zfg: zfg,
-		Zft: zft,
-		Ztp: ztp,
-		Zpts: zpts,
-		Zreb: zreb,
-		Zast: zast,
-		Zstl: zstl,
-		Zblk: zblk,
-		Zto: zto,
-		Zsum: zsum,
+		LastName:  egl.LastName,
+		Min:       min,
+		Fgm:       fgm,
+		Fga:       fga,
+		Ftm:       ftm,
+		Fta:       fta,
+		Tpm:       tpm,
+		Tpa:       tpa,
+		Pts:       pts,
+		Reb:       reb,
+		Ast:       ast,
+		Stl:       stl,
+		Blk:       blk,
+		To:        to,
+		Zfg:       zfg,
+		Zft:       zft,
+		Ztp:       ztp,
+		Zpts:      zpts,
+		Zreb:      zreb,
+		Zast:      zast,
+		Zstl:      zstl,
+		Zblk:      zblk,
+		Zto:       zto,
+		Zsum:      zsum,
 	}
 }
 
