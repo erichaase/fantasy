@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            table, th, td {
+                text-align: center;
+                border: 1px solid black;
+                border-collapse: collapse;
+            }
+
+            th, td {
+                padding: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <table>
+            <tr>
+                <th>Name</td>
+                <th>Min</td>
+                <th>FG</td>
+                <th>FT</td>
+                <th>3P</td>
+                <th>PTS</td>
+                <th>REB</td>
+                <th>AST</td>
+                <th>STL</td>
+                <th>BLK</td>
+                <th>TO</td>
+                <th>FG</td>
+                <th>FT</td>
+                <th>3P</td>
+                <th>PTS</td>
+                <th>REB</td>
+                <th>AST</td>
+                <th>STL</td>
+                <th>BLK</td>
+                <th>TO</td>
+                <th>SUM</td>
+            </tr>
+{{range .Lines}}
+            <tr>
+                <td>{{.FirstName}} {{.LastName}}</td>
+                <td>{{.Min}}</td>
+                <td>{{.Fgm}}-{{.Fga}}</td>
+                <td>{{.Ftm}}-{{.Fta}}</td>
+                <td>{{.Tpm}}-{{.Tpa}}</td>
+                <td>{{.Pts}}</td>
+                <td>{{.Reb}}</td>
+                <td>{{.Ast}}</td>
+                <td>{{.Stl}}</td>
+                <td>{{.Blk}}</td>
+                <td>{{.To}}</td>
+                <td>{{printf "%.1f" .Zfg}}</td>
+                <td>{{printf "%.1f" .Zft}}</td>
+                <td>{{printf "%.1f" .Ztp}}</td>
+                <td>{{printf "%.1f" .Zpts}}</td>
+                <td>{{printf "%.1f" .Zreb}}</td>
+                <td>{{printf "%.1f" .Zast}}</td>
+                <td>{{printf "%.1f" .Zstl}}</td>
+                <td>{{printf "%.1f" .Zblk}}</td>
+                <td>{{printf "%.1f" .Zto}}</td>
+                <td>{{printf "%.1f" .Zsum}}</td>
+            </tr>
+{{end}}
+        </table>
+    </body>
+</html>

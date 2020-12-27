@@ -28,6 +28,7 @@ type statusType struct {
 }
 
 // convert into api client
+// accept optional day argument
 func GameIdsStarted(day string) []int {
 	q := "lang=en&region=us&calendartype=blacklist&limit=100"
 	if day != "" {
