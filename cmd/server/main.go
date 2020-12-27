@@ -13,18 +13,26 @@ import (
 )
 
 func main() {
-	addr := flag.String("addr", "", "The TCP network address that the HTTP server listens to for incoming requests")
-	port := flag.Int("port", 80, "The TCP network port that the HTTP server listens to for incoming requests")
+	lh := flag.Bool("localhost", false, "Configure HTTP server to listen to localhost for local development")
+	port := flag.Int("port", 80, "The port that the HTTP server listens to for incoming requests")
 	flag.Parse()
-	ap := fmt.Sprintf("%s:%d", *addr, *port)
 
-	http.HandleFunc("/", handler)
+	addr := ""
+	if *lh {
+		addr = "localhost"
+	}
+	ap := fmt.Sprintf("%s:%d", addr, *port)
+	log.Printf("Listening on '%s'", ap)
+
+	http.HandleFunc("/lines", handler)
 	log.Fatal(http.ListenAndServe(ap, nil))
 }
 
 var templates = template.Must(template.ParseFiles("web/template/game_lines.tmpl"))
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
+
 	gids := espn.GameIdsStarted("20201225")
 
 	var espnLines []espn.GameLine
