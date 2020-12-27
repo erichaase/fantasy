@@ -28,11 +28,10 @@ type statusType struct {
 }
 
 // convert into api client
-// accept optional day argument
-func GameIdsStarted(day string) []int {
+func GameIdsStarted(params ...string) []int {
 	q := "lang=en&region=us&calendartype=blacklist&limit=100"
-	if day != "" {
-		q = fmt.Sprintf("%s&dates=%s", q, day)
+	if len(params) > 0 {
+		q = fmt.Sprintf("%s&dates=%s", q, params[0])
 	}
 
 	u := &url.URL{

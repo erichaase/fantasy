@@ -7,6 +7,7 @@ import (
 	"github.com/erichaase/fantasy/internal/espn"
 )
 
+// move z scores into receiver methods
 type GameLine struct {
 	EspnId    int
 	FirstName string
@@ -36,7 +37,7 @@ type GameLine struct {
 	Zsum      float64
 }
 
-func BuildGameLine(egl espn.GameLine) GameLine {
+func NewGameLineFromEspn(egl espn.GameLine) GameLine {
 	// populateStats()
 	// populateZScores()
 	min, _ := strconv.Atoi(egl.Minutes)
@@ -100,34 +101,4 @@ func BuildGameLine(egl espn.GameLine) GameLine {
 		Zto:       zto,
 		Zsum:      zsum,
 	}
-}
-
-func PrintGameLine(l GameLine) {
-	fmt.Printf("%s %s,|,%dm,%d-%d,%d-%d,%d-%d,%d-%d-%d,%d-%d-%d,|,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,|,%.1f\n",
-		l.FirstName,
-		l.LastName,
-		l.Min,
-		l.Fgm,
-		l.Fga,
-		l.Ftm,
-		l.Fta,
-		l.Tpm,
-		l.Tpa,
-		l.Pts,
-		l.Reb,
-		l.Ast,
-		l.Stl,
-		l.Blk,
-		l.To,
-		l.Zfg,
-		l.Zft,
-		l.Ztp,
-		l.Zpts,
-		l.Zreb,
-		l.Zast,
-		l.Zstl,
-		l.Zblk,
-		l.Zto,
-		l.Zsum,
-	)
 }

@@ -15,14 +15,10 @@ func main() {
 	log.Fatal(http.ListenAndServe(":3001", nil))
 }
 
-var templates = template.Must(template.ParseFiles("web/template/lines.tmpl"))
-
-type LinesData struct {
-	Lines []fantasy.GameLine
-}
+var templates = template.Must(template.ParseFiles("web/template/game_lines.tmpl"))
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	gids := espn.GameIdsStarted("")
+	gids := espn.GameIdsStarted("20201225")
 
 	var espnLines []espn.GameLine
 	for _, gid := range gids {
@@ -33,18 +29,16 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	var lines []fantasy.GameLine
 	for _, espnLine := range espnLines {
-		line := fantasy.BuildGameLine(espnLine)
+		line := fantasy.NewGameLineFromEspn(espnLine)
 		lines = append(lines, line)
 	}
 
-	sort.SliceStable(lines, func(i, j int) bool {
+	sort.Slice(lines, func(i, j int) bool {
 		return lines[i].Zsum > lines[j].Zsum
 	})
 
-	linesData := &LinesData{
-		Lines: lines,
-	}
-	err := templates.ExecuteTemplate(w, "lines.tmpl", linesData)
+	data := struct{ Lines []fantasy.GameLine }{lines}
+	err := templates.ExecuteTemplate(w, "game_lines.tmpl", data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
