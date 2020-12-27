@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -11,8 +13,13 @@ import (
 )
 
 func main() {
+	addr := flag.String("addr", "", "The TCP network address that the HTTP server listens to for incoming requests")
+	port := flag.Int("port", 80, "The TCP network port that the HTTP server listens to for incoming requests")
+	flag.Parse()
+	ap := fmt.Sprintf("%s:%d", *addr, *port)
+
 	http.HandleFunc("/", handler)
-	log.Fatal(http.ListenAndServe(":3001", nil))
+	log.Fatal(http.ListenAndServe(ap, nil))
 }
 
 var templates = template.Must(template.ParseFiles("web/template/game_lines.tmpl"))
