@@ -7,7 +7,10 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/erichaase/fantasy/internal/espn"
 	"github.com/erichaase/fantasy/internal/fantasy"
@@ -37,6 +40,16 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	q, _ := url.ParseQuery(r.URL.RawQuery)
 	date := q.Get("date")
 
+	lines := buildGameLines(date)
+	data := buildTemplateData(lines)
+
+	err := templates.ExecuteTemplate(w, "game_lines.tmpl", data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func buildGameLines(date string) []fantasy.GameLine {
 	var gids []int
 	if date == "" {
 		gids = espn.GameIdsStarted()
@@ -61,9 +74,38 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return lines[i].Zsum > lines[j].Zsum
 	})
 
-	data := struct{ Lines []fantasy.GameLine }{lines}
-	err := templates.ExecuteTemplate(w, "game_lines.tmpl", data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	return lines
+}
+
+type templateData struct {
+	Players []player
+}
+
+type player struct {
+	Line  fantasy.GameLine
+	Class string
+}
+
+func buildTemplateData(lines []fantasy.GameLine) templateData {
+	playerIds := os.Getenv("PLAYER_IDS")
+	m := make(map[int]bool)
+	for _, pid := range strings.Split(playerIds, ",") {
+		p, _ := strconv.Atoi(pid)
+		m[p] = true
 	}
+
+	var players []player
+	for _, line := range lines {
+		p := player{Line: line}
+		if m[line.EspnId] {
+			p.Class = "team"
+		} else if line.Zsum >= 0.0 {
+			p.Class = "good"
+		} else {
+			p.Class = "bad"
+		}
+		players = append(players, p)
+	}
+
+	return templateData{Players: players}
 }

@@ -11,6 +11,16 @@
             th, td {
                 padding: 10px;
             }
+
+            tr.team {
+                background-color: #FDF2D0;
+            }
+            tr.good {
+                background-color: #DCE9D5;
+            }
+            tr.bad {
+                background-color: #EECDCD;
+            }
         </style>
     </head>
     <body>
@@ -38,29 +48,29 @@
                 <th>TO</td>
                 <th>TOT</td>
             </tr>
-{{range .Lines}}
-            <tr>
-                <td>{{.FirstName}} {{.LastName}}</td>
-                <td>{{.Min}}</td>
-                <td>{{.Fgm}}-{{.Fga}}</td>
-                <td>{{.Ftm}}-{{.Fta}}</td>
-                <td>{{.Tpm}}-{{.Tpa}}</td>
-                <td>{{.Pts}}</td>
-                <td>{{.Reb}}</td>
-                <td>{{.Ast}}</td>
-                <td>{{.Stl}}</td>
-                <td>{{.Blk}}</td>
-                <td>{{.To}}</td>
-                <td>{{printf "%.1f" .Zfg}}</td>
-                <td>{{printf "%.1f" .Zft}}</td>
-                <td>{{printf "%.1f" .Ztp}}</td>
-                <td>{{printf "%.1f" .Zpts}}</td>
-                <td>{{printf "%.1f" .Zreb}}</td>
-                <td>{{printf "%.1f" .Zast}}</td>
-                <td>{{printf "%.1f" .Zstl}}</td>
-                <td>{{printf "%.1f" .Zblk}}</td>
-                <td>{{printf "%.1f" .Zto}}</td>
-                <td>{{printf "%.1f" .Zsum}}</td>
+{{range .Players}}
+            <tr class="{{ .Class }}">
+                <td>{{.Line.FirstName}} {{.Line.LastName}}</td>
+                <td>{{.Line.Min}}</td>
+                <td>{{.Line.Fgm}}-{{.Line.Fga}}</td>
+                <td>{{.Line.Ftm}}-{{.Line.Fta}}</td>
+                <td>{{.Line.Tpm}}-{{.Line.Tpa}}</td>
+                <td>{{.Line.Pts}}</td>
+                <td>{{.Line.Reb}}</td>
+                <td>{{.Line.Ast}}</td>
+                <td>{{.Line.Stl}}</td>
+                <td>{{.Line.Blk}}</td>
+                <td>{{.Line.To}}</td>
+                <td>{{printf "%.1f" .Line.Zfg}}</td>
+                <td>{{printf "%.1f" .Line.Zft}}</td>
+                <td>{{printf "%.1f" .Line.Ztp}}</td>
+                <td>{{printf "%.1f" .Line.Zpts}}</td>
+                <td>{{printf "%.1f" .Line.Zreb}}</td>
+                <td>{{printf "%.1f" .Line.Zast}}</td>
+                <td>{{printf "%.1f" .Line.Zstl}}</td>
+                <td>{{printf "%.1f" .Line.Zblk}}</td>
+                <td>{{printf "%.1f" .Line.Zto}}</td>
+                <td>{{printf "%.1f" .Line.Zsum}}</td>
             </tr>
 {{end}}
         </table>
