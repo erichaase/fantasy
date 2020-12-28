@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 	"sort"
 
 	"github.com/erichaase/fantasy/internal/espn"
@@ -33,7 +34,15 @@ var templates = template.Must(template.ParseFiles("web/template/game_lines.tmpl"
 func handler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
 
-	gids := espn.GameIdsStarted("20201225")
+	q, _ := url.ParseQuery(r.URL.RawQuery)
+	date := q.Get("date")
+
+	var gids []int
+	if date == "" {
+		gids = espn.GameIdsStarted()
+	} else {
+		gids = espn.GameIdsStarted(date)
+	}
 
 	var espnLines []espn.GameLine
 	for _, gid := range gids {
