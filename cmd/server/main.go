@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 
 	"github.com/erichaase/fantasy/internal/gameline"
 )
@@ -22,18 +21,6 @@ func main() {
 	ap := fmt.Sprintf("%s:%d", addr, *port)
 	log.Printf("Listening on '%s'", ap)
 
-	http.HandleFunc("/lines", handler)
+	http.HandleFunc("/lines", gameline.LinesHandler)
 	log.Fatal(http.ListenAndServe(ap, nil))
-}
-
-func handler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
-
-	q, _ := url.ParseQuery(r.URL.RawQuery)
-	d := q.Get("date")
-
-	err := gameline.WriteLinesResponse(w, d)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
 }

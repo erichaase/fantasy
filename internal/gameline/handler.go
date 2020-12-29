@@ -1,7 +1,9 @@
 package gameline
 
 import (
+	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"sort"
 	"strconv"
@@ -18,10 +20,19 @@ type row struct {
 
 var templates = template.Must(template.ParseFiles("web/template/gamelines.tmpl"))
 
-func WriteLinesResponse(w http.ResponseWriter, date string) error {
-	lines := getGameLines(date)
+func LinesHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
+
+	q, _ := url.ParseQuery(r.URL.RawQuery)
+	d := q.Get("date")
+
+	lines := getGameLines(d)
 	rows := buildRows(lines)
-	return templates.ExecuteTemplate(w, "gamelines.tmpl", rows)
+
+	err := templates.ExecuteTemplate(w, "gamelines.tmpl", rows)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func getGameLines(date string) []gameLine {
