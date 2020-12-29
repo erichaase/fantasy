@@ -12,6 +12,9 @@
                 padding: 10px;
             }
 
+            th {
+                background-color: #CCDAF5;
+            }
             tr.team {
                 background-color: #FDF2D0;
             }
@@ -48,7 +51,7 @@
                 <th>TO</td>
                 <th>TOT</td>
             </tr>
-{{range .Players}}
+{{range .}}
             <tr class="{{ .Class }}">
                 <td>{{.Line.FirstName}} {{.Line.LastName}}</td>
                 <td>{{.Line.Min}}</td>

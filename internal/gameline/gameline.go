@@ -1,4 +1,4 @@
-package fantasy
+package gameline
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 )
 
 // move z scores into receiver methods
-type GameLine struct {
+type gameLine struct {
 	EspnId    int
 	FirstName string
 	LastName  string
@@ -37,7 +37,7 @@ type GameLine struct {
 	Zsum      float64
 }
 
-func NewGameLineFromEspn(egl espn.GameLine) GameLine {
+func newGameLineFromEspn(egl espn.GameLine) gameLine {
 	// populateStats()
 	// populateZScores()
 	min, _ := strconv.Atoi(egl.Minutes)
@@ -73,7 +73,7 @@ func NewGameLineFromEspn(egl espn.GameLine) GameLine {
 	zto := -((float64(to) - 1.95) / 0.87)
 	zsum := zfg + zft + ztp + zpts + zreb + zast + zstl + zblk + zto
 
-	return GameLine{
+	return gameLine{
 		EspnId:    egl.Id,
 		FirstName: egl.FirstName,
 		LastName:  egl.LastName,
