@@ -1,17 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fantasy
+  name: web
   namespace: fantasy
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: fantasy
+      app: web
   template:
     metadata:
       labels:
-        app: fantasy
+        app: web
     spec:
       containers:
         - name: web

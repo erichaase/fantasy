@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: fantasy
+  name: web
   namespace: fantasy
 spec:
   type: LoadBalancer
   selector:
-    app: fantasy
+    app: web
   ports:
     - port: 80
       targetPort: 8080
