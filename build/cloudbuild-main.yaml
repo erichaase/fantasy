@@ -2,15 +2,25 @@ timeout: 600s
 images: ["gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA"]
 
 steps:
+  # go test
   - id: "docker build"
     name: &docker_builder "gcr.io/cloud-builders/docker"
     args:
       - build
-      - -f
-      - build/Dockerfile
-      - -t
-      - gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA
+      - --file=build/Dockerfile
+      - --tag=gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA
       - .
   - id: "docker push"
     name: *docker_builder
     args: ["push", "gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA"]
+  - id: "gke deploy"
+    name: "gcr.io/cloud-builders/gke-deploy"
+    args:
+      - run
+      - --filename=deploy
+      - --image=gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA
+      - --location=us-central1-c
+      - --cluster=fantasy
+      - --app=fantasy
+      - --version=$SHORT_SHA
+      - --annotation=gcb-build-id=$BUILD_ID
