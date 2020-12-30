@@ -2,7 +2,6 @@ timeout: 600s
 images: ["gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA"]
 
 steps:
-  # go test
   - id: "docker build"
     name: &docker_builder "gcr.io/cloud-builders/docker"
     args:
