@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fantasy
+  namespace: fantasy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fantasy
+  template:
+    metadata:
+      labels:
+        app: fantasy
+    spec:
+      containers:
+        - name: web
+          image: gcr.io/$PROJECT_ID/fantasy # updated via gke-deploy google cloud builder to use image digest
+          # image: gcr.io/wp-engine-ehaase/hacker-news 
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
