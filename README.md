@@ -5,4 +5,5 @@
 
 ## Google Cloud Build
 * Enable GCB and GCR APIs: `gcloud services enable cloudbuild.googleapis.com containerregistry.googleapis.com`
+* Grant GCB SA k8s access: `gcloud projects add-iam-policy-binding erichaase-fantasy --member=serviceAccount:822045923302@cloudbuild.gserviceaccount.com --role=roles/container.developer`
 * [Create GCB trigger(s) via UI](https://console.cloud.google.com/cloud-build/triggers/add)
