@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: gcr.io/$PROJECT_ID/fantasy # updated via gke-deploy google cloud builder to use image digest
+          image: gcr.io/erichaase-fantasy/fantasy # updated via gke-deploy google cloud builder to use image digest
           # image: gcr.io/wp-engine-ehaase/hacker-news 
           ports:
             - containerPort: 8080
