@@ -1,0 +1,16 @@
+timeout: 600s
+images: ["gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA"]
+
+steps:
+  - id: "docker build"
+    name: &docker_builder "gcr.io/cloud-builders/docker"
+    args:
+      - build
+      - -f
+      - build/Dockerfile
+      - -t
+      - gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA
+      - .
+  - id: "docker push"
+    name: *docker_builder
+    args: ["push", "gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA"]
