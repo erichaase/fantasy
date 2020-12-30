@@ -16,9 +16,10 @@ spec:
       containers:
         - name: web
           image: gcr.io/erichaase-fantasy/fantasy # updated via gke-deploy google cloud builder to use image digest
-          # image: gcr.io/wp-engine-ehaase/hacker-news 
           ports:
             - containerPort: 8080
           env:
             - name: PORT
               value: "8080"
+            - name: PLAYER_IDS
+              value: "3136195,4278073,3058254,3978,2490149,3147657,3448,3157465,3934673,2595516,3948153,2528426,4017837,3064447"
