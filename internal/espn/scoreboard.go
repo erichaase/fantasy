@@ -24,17 +24,15 @@ func NewScoreboardClient(params ...interface{}) scoreboardClient {
 		u = params[1].(*url.URL)
 	} else {
 		c = &http.Client{Timeout: 10 * time.Second}
-		u = &url.URL{
-			Scheme: "http",
-			Host:   "site.api.espn.com",
-			Path:   "apis/site/v2/sports/basketball/nba/scoreboard",
-		}
+		u = &url.URL{Scheme: "http", Host: "site.api.espn.com"}
 	}
 
 	return scoreboardClient{httpClient: c, baseURL: u}
 }
 
 func (c scoreboardClient) GameIDs(params ...string) ([]int, error) {
+	c.baseURL.Path = "apis/site/v2/sports/basketball/nba/scoreboard"
+
 	qs := "lang=en&region=us&calendartype=blacklist&limit=100"
 	if len(params) == 1 {
 		qs = fmt.Sprintf("%s&dates=%s", qs, params[0])
