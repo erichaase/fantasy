@@ -1,5 +1,4 @@
 timeout: 600s
-images: ["gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA"]
 
 steps:
   - id: "docker build"

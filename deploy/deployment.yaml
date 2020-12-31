@@ -14,7 +14,7 @@ spec:
         app: web
     spec:
       containers:
-        - name: web
+        - name: server
           image: gcr.io/erichaase-fantasy/fantasy # updated via gke-deploy google cloud builder to use image digest
           ports:
             - containerPort: 8080
