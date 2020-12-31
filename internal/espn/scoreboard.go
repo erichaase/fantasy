@@ -3,62 +3,68 @@ package espn
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 )
 
-type scoreboard struct {
-	Events []event
+type scoreboardClient struct {
+	httpClient *http.Client
+	baseURL    *url.URL
 }
 
-type event struct {
-	Id     string
-	Status status
-}
+func NewScoreboardClient(params ...interface{}) scoreboardClient {
+	var c *http.Client
+	var u *url.URL
 
-type status struct {
-	Type statusType
-}
-
-type statusType struct {
-	State string // values: "pre", "in", "post"
-}
-
-// convert into api client
-func GameIdsStarted(params ...string) []int {
-	q := "lang=en&region=us&calendartype=blacklist&limit=100"
-	if len(params) > 0 {
-		q = fmt.Sprintf("%s&dates=%s", q, params[0])
+	if len(params) == 2 {
+		c = params[0].(*http.Client)
+		u = params[1].(*url.URL)
+	} else {
+		c = &http.Client{Timeout: 10 * time.Second}
+		u = &url.URL{
+			Scheme: "http",
+			Host:   "site.api.espn.com",
+			Path:   "apis/site/v2/sports/basketball/nba/scoreboard",
+		}
 	}
 
-	u := &url.URL{
-		Scheme:   "http",
-		Host:     "site.api.espn.com",
-		Path:     "apis/site/v2/sports/basketball/nba/scoreboard",
-		RawQuery: q,
-	}
+	return scoreboardClient{httpClient: c, baseURL: u}
+}
 
-	// var myClient = &http.Client{Timeout: 10 * time.Second}
-	resp, err := http.Get(u.String())
-	// check for non successful http status
-	if err != nil { // shorthand to make this terse
-		log.Fatalln(err)
+func (c scoreboardClient) GameIDs(params ...string) ([]int, error) {
+	qs := "lang=en&region=us&calendartype=blacklist&limit=100"
+	if len(params) == 1 {
+		qs = fmt.Sprintf("%s&dates=%s", qs, params[0])
+	}
+	c.baseURL.RawQuery = qs
+
+	resp, err := c.httpClient.Get(c.baseURL.String())
+	if err != nil {
+		return nil, fmt.Errorf("scoreboardClient.GameIDs: http.Client.Get: %w", err)
 	}
 	defer resp.Body.Close()
 
-	// json.NewDecoder(r.Body).Decode(target)
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalln(err)
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("scoreboardClient.GameIDs: http.Client.Get: non-successful status code: %d", resp.StatusCode)
 	}
 
-	sb := scoreboard{}
-	err = json.Unmarshal(body, &sb)
+	var sb struct {
+		Events []struct {
+			Id     string
+			Status struct {
+				Type struct {
+					State string // values: "pre", "in", "post"
+				}
+			}
+		}
+	}
+
+	err = json.NewDecoder(resp.Body).Decode(&sb)
 	if err != nil {
-		log.Fatalln(err)
+		return nil, fmt.Errorf("scoreboardClient.GameIDs: json.Decoder.Decode: %w", err)
 	}
 
 	var ids []int
@@ -66,11 +72,12 @@ func GameIdsStarted(params ...string) []int {
 		if e.Status.Type.State != "pre" {
 			id, err := strconv.Atoi(e.Id)
 			if err != nil {
-				log.Fatalln(err)
+				log.Printf("WARNING: scoreboardClient.GameIDs: strconv.Atoi: error converting game ID: '%s'\n", e.Id)
+				continue
 			}
 			ids = append(ids, id)
 		}
 	}
 
-	return ids
+	return ids, nil
 }

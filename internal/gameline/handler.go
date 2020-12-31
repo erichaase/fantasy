@@ -1,6 +1,7 @@
 package gameline
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -26,21 +27,35 @@ func LinesHandler(w http.ResponseWriter, r *http.Request) {
 	q, _ := url.ParseQuery(r.URL.RawQuery)
 	d := q.Get("date")
 
-	lines := getGameLines(d)
+	lines, err := getGameLines(d)
+	if err != nil {
+		// report error to 3rd party
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
 	rows := buildRows(lines)
 
-	err := templates.ExecuteTemplate(w, "gamelines.tmpl", rows)
+	err = templates.ExecuteTemplate(w, "gamelines.tmpl", rows)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
-func getGameLines(date string) []gameLine {
+func getGameLines(date string) ([]gameLine, error) {
 	var gids []int
+	var err error
+
+	c := espn.NewScoreboardClient()
 	if date == "" {
-		gids = espn.GameIdsStarted()
+		gids, err = c.GameIDs()
+		if err != nil {
+			return nil, fmt.Errorf("getGameLines: %w", err)
+		}
 	} else {
-		gids = espn.GameIdsStarted(date)
+		gids, err = c.GameIDs(date)
+		if err != nil {
+			return nil, fmt.Errorf("getGameLines: %w", err)
+		}
 	}
 
 	var espnLines []espn.GameLine
@@ -60,7 +75,7 @@ func getGameLines(date string) []gameLine {
 		return lines[i].Zsum > lines[j].Zsum
 	})
 
-	return lines
+	return lines, nil
 }
 
 func buildRows(gameLines []gameLine) []row {
