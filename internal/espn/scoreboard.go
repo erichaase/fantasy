@@ -70,7 +70,7 @@ func (c scoreboardClient) GameIDs(params ...string) ([]int, error) {
 		if e.Status.Type.State != "pre" {
 			id, err := strconv.Atoi(e.Id)
 			if err != nil {
-				log.Printf("WARNING: scoreboardClient.GameIDs: strconv.Atoi: error converting game ID: '%s'\n", e.Id)
+				log.Printf("WARNING: scoreboardClient.GameIDs: strconv.Atoi: %s\n", err.Error())
 				continue
 			}
 			ids = append(ids, id)

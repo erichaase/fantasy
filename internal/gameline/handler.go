@@ -60,8 +60,14 @@ func getGameLines(date string) ([]gameLine, error) {
 
 	var espnLines []espn.GameLine
 	for _, gid := range gids {
-		for _, line := range espn.GameLines(gid) {
-			espnLines = append(espnLines, line)
+		gls, err := espn.NewGamecastClient().GameLines(gid)
+		if err != nil {
+			log.Printf("WARNING: getGameLines: gamecastClient.GameLines: %s\n", err.Error())
+			continue
+		}
+
+		for _, gl := range gls {
+			espnLines = append(espnLines, gl)
 		}
 	}
 

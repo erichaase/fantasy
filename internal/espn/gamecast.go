@@ -4,27 +4,30 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"regexp"
+	"time"
 )
 
-type game struct {
-	Gamecast gamecast
+type gamecastClient struct {
+	httpClient *http.Client
+	baseURL    *url.URL
 }
 
-type gamecast struct {
-	Stats stats
-}
+func NewGamecastClient(params ...interface{}) gamecastClient {
+	var c *http.Client
+	var u *url.URL
 
-type stats struct {
-	Player player
-}
+	if len(params) == 2 {
+		c = params[0].(*http.Client)
+		u = params[1].(*url.URL)
+	} else {
+		c = &http.Client{Timeout: 10 * time.Second}
+		u = &url.URL{Scheme: "http", Host: "scores.espn.go.com"}
+	}
 
-type player struct {
-	Home []GameLine
-	Away []GameLine
+	return gamecastClient{httpClient: c, baseURL: u}
 }
 
 type GameLine struct {
@@ -51,51 +54,57 @@ type GameLine struct {
 	EnteredGame    bool
 }
 
-// convert into api client
-func GameLines(gid int) []GameLine {
-	query := fmt.Sprintf("xhr=1&gameId=%d&lang=en&init=true&setType=true&confId=null", gid)
-	u := &url.URL{
-		Scheme:   "http",
-		Host:     "scores.espn.go.com",
-		Path:     "nba/gamecast12/master",
-		RawQuery: query,
-	}
+func (c gamecastClient) GameLines(gid int) ([]GameLine, error) {
+	c.baseURL.Path = "nba/gamecast12/master"
+	c.baseURL.RawQuery = fmt.Sprintf("xhr=1&gameId=%d&lang=en&init=true&setType=true&confId=null", gid)
 
-	// var myClient = &http.Client{Timeout: 10 * time.Second}
-	resp, err := http.Get(u.String())
-	// check for non successful http status
-	if err != nil { // shorthand to make this terse
-		log.Fatalln(err)
+	resp, err := c.httpClient.Get(c.baseURL.String())
+	if err != nil {
+		return nil, fmt.Errorf("gamecastClient.GameLines: http.Client.Get: %w", err)
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("gamecastClient.GameLines: http.Client.Get: non-successful status code: %d", resp.StatusCode)
+	}
+
+	// should use json.Decode() here but the payload includes unicode chars which we need to strip, see below for details
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		return nil, fmt.Errorf("gamecastClient.GameLines: ioutil.ReadAll: %w", err)
 	}
 
 	s := string(body)
-	re := regexp.MustCompile("[[:^print:]]")
-	t := re.ReplaceAllLiteralString(s, "")
+	t := regexp.MustCompile("[[:^print:]]").ReplaceAllLiteralString(s, "")
 	b := []byte(t)
 
-	g := game{}
-	err = json.Unmarshal(b, &g)
-	if err != nil {
-		log.Fatalln(err)
+	var g struct {
+		Gamecast struct {
+			Stats struct {
+				Player struct {
+					Home []GameLine
+					Away []GameLine
+				}
+			}
+		}
 	}
 
-	var egls []GameLine
+	err = json.Unmarshal(b, &g)
+	if err != nil {
+		return nil, fmt.Errorf("gamecastClient.GameLines: json.Unmarshal: %w", err)
+	}
+
+	var gls []GameLine
 	for _, gl := range g.Gamecast.Stats.Player.Home {
 		if gl.Id != 0 { // totals row has a 0 id
-			egls = append(egls, gl)
+			gls = append(gls, gl)
 		}
 	}
 	for _, gl := range g.Gamecast.Stats.Player.Away {
 		if gl.Id != 0 { // totals row has a 0 id
-			egls = append(egls, gl)
+			gls = append(gls, gl)
 		}
 	}
 
-	return egls
+	return gls, nil
 }

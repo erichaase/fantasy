@@ -25,7 +25,7 @@ func main() {
 	}
 
 	ap := fmt.Sprintf("%s:%s", addr, port)
-	log.Printf("Listening on '%s'", ap)
+	log.Printf("Listening on 'http://%s'", ap)
 
 	http.HandleFunc("/lines", gameline.LinesHandler)
 	log.Fatal(http.ListenAndServe(ap, nil))
