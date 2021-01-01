@@ -1,6 +1,15 @@
 timeout: 600s
 
 steps:
+  - id: "go fmt"
+    name: "golang:1.15"
+    entrypoint: "bash"
+    args:
+      - -c
+      - |
+        gofmt -d .
+        test -z $$(gofmt -l .)
+
   - id: "go test"
     name: "golang:1.15"
     entrypoint: "go"
